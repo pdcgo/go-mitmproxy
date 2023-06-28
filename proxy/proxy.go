@@ -30,6 +30,7 @@ type Proxy struct {
 	server          *http.Server
 	interceptor     *middle
 	shouldIntercept func(address string) bool
+	UseTor          bool
 }
 
 func NewProxy(opts *Options) (*Proxy, error) {
@@ -330,7 +331,7 @@ func (proxy *Proxy) handleConnect(res http.ResponseWriter, req *http.Request) {
 		conn, err = proxy.interceptor.dial(req)
 	} else {
 		log.Debugf("begin transpond %v", req.Host)
-		conn, err = getConnFrom(req.Host, proxy.Opts.Upstream)
+		conn, err = getConnFrom(req.Host, proxy.Opts.Upstream, proxy.UseTor)
 	}
 	if err != nil {
 		log.Error(err)

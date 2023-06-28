@@ -15,6 +15,7 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/proxy"
 )
 
 // client connection
@@ -150,13 +151,13 @@ func (connCtx *ConnContext) initHttpServerConn() {
 	connCtx.ServerConn = serverConn
 }
 
-func (connCtx *ConnContext) initServerTcpConn(req *http.Request) error {
+func (connCtx *ConnContext) initServerTcpConn(req *http.Request, useTor bool) error {
 	log.Debugln("in initServerTcpConn")
 	ServerConn := newServerConn()
 	connCtx.ServerConn = ServerConn
 	ServerConn.Address = connCtx.pipeConn.host
 
-	plainConn, err := getConnFrom(req.Host, connCtx.proxy.Opts.Upstream)
+	plainConn, err := getConnFrom(req.Host, connCtx.proxy.Opts.Upstream, useTor)
 	if err != nil {
 		return err
 	}
@@ -369,7 +370,7 @@ func getProxyConn(proxyUrl *url.URL, address string) (net.Conn, error) {
 	return conn, nil
 }
 
-func getConnFrom(address string, upstream string) (net.Conn, error) {
+func getConnFrom(address string, upstream string, useTor bool) (net.Conn, error) {
 	clientReq := &http.Request{URL: &url.URL{Scheme: "https", Host: address}}
 	proxyUrl, err := clientProxy(upstream)(clientReq)
 	if err != nil {
@@ -380,7 +381,13 @@ func getConnFrom(address string, upstream string) (net.Conn, error) {
 	if proxyUrl != nil {
 		conn, err = getProxyConn(proxyUrl, address)
 	} else {
-		conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", address)
+		if useTor {
+			log.Println("using Proxy tor")
+			d, _ := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, nil)
+			conn, err = d.Dial("tcp", address)
+		} else {
+			conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", address)
+		}
 	}
 	return conn, err
 }
