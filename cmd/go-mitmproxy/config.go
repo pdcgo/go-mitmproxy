@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/lqqyt2423/go-mitmproxy/proxy"
+	"github.com/pdcgo/go-mitmproxy/proxy"
 	log "github.com/sirupsen/logrus"
 )
 

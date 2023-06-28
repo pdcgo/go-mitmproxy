@@ -24,7 +24,7 @@
 ### Installation
 
 ```bash
-go install github.com/lqqyt2423/go-mitmproxy/cmd/go-mitmproxy@latest
+go install github.com/pdcgo/go-mitmproxy/cmd/go-mitmproxy@latest
 ```
 
 ### Usage
@@ -83,7 +83,7 @@ package main
 import (
 	"log"
 
-	"github.com/lqqyt2423/go-mitmproxy/proxy"
+	"github.com/pdcgo/go-mitmproxy/proxy"
 )
 
 func main() {
