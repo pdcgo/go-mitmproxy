@@ -15,7 +15,6 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/proxy"
 )
 
 // client connection
@@ -151,7 +150,7 @@ func (connCtx *ConnContext) initHttpServerConn() {
 	connCtx.ServerConn = serverConn
 }
 
-func (connCtx *ConnContext) initServerTcpConn(req *http.Request, useTor bool) error {
+func (connCtx *ConnContext) initServerTcpConn(req *http.Request) error {
 	log.Debugln("in initServerTcpConn")
 	ServerConn := newServerConn()
 	connCtx.ServerConn = ServerConn

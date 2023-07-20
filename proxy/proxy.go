@@ -421,6 +421,9 @@ func (proxy *Proxy) getUpstreamConn(req *http.Request) (net.Conn, error) {
 	if proxyUrl != nil {
 		conn, err = getProxyConn(proxyUrl, req.Host)
 	} else {
+		// log.Println("using Proxy tor")
+		// 	d, _ := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, nil)
+		// 	conn, err = d.Dial("tcp", address)
 		conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", req.Host)
 	}
 	return conn, err

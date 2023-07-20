@@ -139,7 +139,7 @@ func (m *middle) close() error {
 
 func (m *middle) dial(req *http.Request) (net.Conn, error) {
 	pipeClientConn, pipeServerConn := newPipes(req)
-	err := pipeServerConn.connContext.initServerTcpConn(req, m.proxy.UseTor)
+	err := pipeServerConn.connContext.initServerTcpConn(req)
 	if err != nil {
 		pipeClientConn.Close()
 		pipeServerConn.Close()
