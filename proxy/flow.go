@@ -118,17 +118,23 @@ type Flow struct {
 	Stream            bool
 	UseSeparateClient bool // use separate http client to send http request
 	done              chan struct{}
+	next              bool
 }
 
 func newFlow() *Flow {
 	return &Flow{
 		Id:   uuid.NewV4(),
 		done: make(chan struct{}),
+		next: true,
 	}
 }
 
 func (f *Flow) Done() <-chan struct{} {
 	return f.done
+}
+
+func (f *Flow) DontCallNextAddon() {
+	f.next = false
 }
 
 func (f *Flow) finish() {

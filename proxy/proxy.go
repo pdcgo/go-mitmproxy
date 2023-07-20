@@ -316,7 +316,10 @@ func (proxy *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 			// trigger addon event Response
 			for _, addon := range proxy.Addons {
-				addon.Response(f)
+				if f.next == true {
+					addon.Response(f)
+				}
+
 			}
 		}
 	}
