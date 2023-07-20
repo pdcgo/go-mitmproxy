@@ -13,6 +13,7 @@ import (
 	"golang.org/x/net/http2"
 
 	log "github.com/sirupsen/logrus"
+	proxyh "golang.org/x/net/proxy"
 )
 
 type Options struct {
@@ -29,6 +30,7 @@ type Proxy struct {
 	Version  string
 	Addons   []Addon
 	UseHttp2 bool
+	TorProxy string
 
 	client          *http.Client
 	server          *http.Server
@@ -433,10 +435,14 @@ func (proxy *Proxy) getUpstreamConn(req *http.Request) (net.Conn, error) {
 	if proxyUrl != nil {
 		conn, err = getProxyConn(proxyUrl, req.Host)
 	} else {
-		// log.Println("using Proxy tor")
-		// 	d, _ := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, nil)
-		// 	conn, err = d.Dial("tcp", address)
-		conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", req.Host)
+		if proxy.TorProxy != "" {
+			log.Println("using Proxy tor")
+			d, _ := proxyh.SOCKS5("tcp", proxy.TorProxy, nil, nil)
+			conn, err = d.Dial("tcp", req.Host)
+		} else {
+			conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", req.Host)
+		}
+
 	}
 	return conn, err
 }
