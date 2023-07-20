@@ -42,15 +42,16 @@ type Proxy struct {
 // proxy.server req context key
 var proxyReqCtxKey = new(struct{})
 
-func NewProxy(opts *Options) (*Proxy, error) {
+func NewProxy(usehttp2 bool, opts *Options) (*Proxy, error) {
 	if opts.StreamLargeBodies <= 0 {
 		opts.StreamLargeBodies = 1024 * 1024 * 5 // default: 5mb
 	}
 
 	proxy := &Proxy{
-		Opts:    opts,
-		Version: "1.7.0",
-		Addons:  make([]Addon, 0),
+		Opts:     opts,
+		Version:  "1.7.0",
+		Addons:   make([]Addon, 0),
+		UseHttp2: usehttp2,
 	}
 
 	transport := &http.Transport{

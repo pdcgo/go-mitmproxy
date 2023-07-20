@@ -33,7 +33,7 @@ func main() {
 		StreamLargeBodies: 1024 * 1024 * 5,
 	}
 
-	p, err := proxy.NewProxy(opts)
+	p, err := proxy.NewProxy(true, opts)
 	if err != nil {
 		log.Fatal(err)
 	}

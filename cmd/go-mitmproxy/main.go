@@ -58,7 +58,7 @@ func main() {
 		Upstream:          config.Upstream,
 	}
 
-	p, err := proxy.NewProxy(opts)
+	p, err := proxy.NewProxy(true, opts)
 	if err != nil {
 		log.Fatal(err)
 	}

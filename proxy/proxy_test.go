@@ -88,7 +88,7 @@ func (helper *testProxyHelper) init(t *testing.T) {
 	helper.httpsEndpoint = httpsEndpoint
 
 	// start proxy
-	testProxy, err := NewProxy(&Options{
+	testProxy, err := NewProxy(false, &Options{
 		Addr:        helper.proxyAddr, // some random port
 		SslInsecure: true,
 	})
