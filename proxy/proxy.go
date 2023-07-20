@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"golang.org/x/net/http2"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,9 +25,10 @@ type Options struct {
 }
 
 type Proxy struct {
-	Opts    *Options
-	Version string
-	Addons  []Addon
+	Opts     *Options
+	Version  string
+	Addons   []Addon
+	UseHttp2 bool
 
 	client          *http.Client
 	server          *http.Server
@@ -48,16 +51,25 @@ func NewProxy(opts *Options) (*Proxy, error) {
 		Addons:  make([]Addon, 0),
 	}
 
-	proxy.client = &http.Client{
-		Transport: &http.Transport{
-			Proxy:              proxy.realUpstreamProxy(),
-			ForceAttemptHTTP2:  false, // disable http2
-			DisableCompression: true,  // To get the original response from the server, set Transport.DisableCompression to true.
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: opts.SslInsecure,
-				KeyLogWriter:       getTlsKeyLogWriter(),
-			},
+	transport := &http.Transport{
+		Proxy:              proxy.realUpstreamProxy(),
+		ForceAttemptHTTP2:  false, // disable http2
+		DisableCompression: true,  // To get the original response from the server, set Transport.DisableCompression to true.
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: opts.SslInsecure,
+			KeyLogWriter:       getTlsKeyLogWriter(),
 		},
+	}
+
+	if proxy.UseHttp2 {
+		err := http2.ConfigureTransport(transport)
+		if err != nil {
+			log.Fatalf("Cannot switch to HTTP2: %v", err)
+		}
+	}
+
+	proxy.client = &http.Client{
+		Transport: transport,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			// 禁止自动重定向
 			return http.ErrUseLastResponse
