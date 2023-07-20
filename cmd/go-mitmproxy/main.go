@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	rawLog "log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -24,6 +25,7 @@ type Config struct {
 	Debug       int      // debug mode: 1 - print debug log, 2 - show debug from
 	Dump        string   // dump filename
 	DumpLevel   int      // dump level: 0 - header, 1 - header + body
+	Upstream    string   // upstream proxy
 	MapRemote   string   // map remote config filename
 	MapLocal    string   // map local config filename
 
@@ -53,6 +55,7 @@ func main() {
 		StreamLargeBodies: 1024 * 1024 * 5,
 		SslInsecure:       config.SslInsecure,
 		CaRootPath:        config.CertPath,
+		Upstream:          config.Upstream,
 	}
 
 	p, err := proxy.NewProxy(opts)
@@ -68,13 +71,13 @@ func main() {
 	log.Infof("go-mitmproxy version %v\n", p.Version)
 
 	if len(config.IgnoreHosts) > 0 {
-		p.SetShouldInterceptRule(func(address string) bool {
-			return !matchHost(address, config.IgnoreHosts)
+		p.SetShouldInterceptRule(func(req *http.Request) bool {
+			return !matchHost(req.Host, config.IgnoreHosts)
 		})
 	}
 	if len(config.AllowHosts) > 0 {
-		p.SetShouldInterceptRule(func(address string) bool {
-			return matchHost(address, config.AllowHosts)
+		p.SetShouldInterceptRule(func(req *http.Request) bool {
+			return matchHost(req.Host, config.AllowHosts)
 		})
 	}
 

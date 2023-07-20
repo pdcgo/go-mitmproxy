@@ -21,7 +21,7 @@ import (
 // client connection
 type ClientConn struct {
 	Id   uuid.UUID
-	Conn net.Conn
+	Conn net.Conn // rawClientConnContextKey is this
 	Tls  bool
 }
 
@@ -116,7 +116,7 @@ func (connCtx *ConnContext) initHttpServerConn() {
 	serverConn := newServerConn()
 	serverConn.client = &http.Client{
 		Transport: &http.Transport{
-			Proxy: clientProxy(connCtx.proxy.Opts.Upstream),
+			Proxy: connCtx.proxy.realUpstreamProxy(),
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				c, err := (&net.Dialer{}).DialContext(ctx, network, addr)
 				if err != nil {
@@ -157,7 +157,7 @@ func (connCtx *ConnContext) initServerTcpConn(req *http.Request, useTor bool) er
 	connCtx.ServerConn = ServerConn
 	ServerConn.Address = connCtx.pipeConn.host
 
-	plainConn, err := getConnFrom(req.Host, connCtx.proxy.Opts.Upstream, useTor)
+	plainConn, err := connCtx.proxy.getUpstreamConn(req)
 	if err != nil {
 		return err
 	}
@@ -368,26 +368,4 @@ func getProxyConn(proxyUrl *url.URL, address string) (net.Conn, error) {
 		return nil, errors.New(text)
 	}
 	return conn, nil
-}
-
-func getConnFrom(address string, upstream string, useTor bool) (net.Conn, error) {
-	clientReq := &http.Request{URL: &url.URL{Scheme: "https", Host: address}}
-	proxyUrl, err := clientProxy(upstream)(clientReq)
-	if err != nil {
-		return nil, err
-	}
-
-	var conn net.Conn
-	if proxyUrl != nil {
-		conn, err = getProxyConn(proxyUrl, address)
-	} else {
-		if useTor {
-			log.Println("using Proxy tor")
-			d, _ := proxy.SOCKS5("tcp", "127.0.0.1:9050", nil, nil)
-			conn, err = d.Dial("tcp", address)
-		} else {
-			conn, err = (&net.Dialer{}).DialContext(context.Background(), "tcp", address)
-		}
-	}
-	return conn, err
 }
