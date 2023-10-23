@@ -48,10 +48,9 @@ func NewProxy(usehttp2 bool, opts *Options) (*Proxy, error) {
 	}
 
 	proxy := &Proxy{
-		Opts:     opts,
-		Version:  "1.7.0",
-		Addons:   make([]Addon, 0),
-		UseHttp2: usehttp2,
+		Opts:    opts,
+		Version: "1.7.1",
+		Addons:  make([]Addon, 0),
 	}
 
 	transport := &http.Transport{
@@ -208,6 +207,9 @@ func (proxy *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 
 	f.ConnContext.FlowCount = f.ConnContext.FlowCount + 1
 
+	rawReqUrlHost := f.Request.URL.Host
+	rawReqUrlScheme := f.Request.URL.Scheme
+
 	// trigger addon event Requestheaders
 	for _, addon := range proxy.Addons {
 		addon.Requestheaders(f)
@@ -265,8 +267,16 @@ func (proxy *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 
 	f.ConnContext.initHttpServerConn()
+
+	useSeparateClient := f.UseSeparateClient
+	if !useSeparateClient {
+		if rawReqUrlHost != f.Request.URL.Host || rawReqUrlScheme != f.Request.URL.Scheme {
+			useSeparateClient = true
+		}
+	}
+
 	var proxyRes *http.Response
-	if f.UseSeparateClient {
+	if useSeparateClient {
 		proxyRes, err = proxy.client.Do(proxyReq)
 	} else {
 		proxyRes, err = f.ConnContext.ServerConn.client.Do(proxyReq)
