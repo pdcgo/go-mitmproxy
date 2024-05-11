@@ -136,11 +136,39 @@ func (proxy *Proxy) Shutdown(ctx context.Context) error {
 	return err
 }
 
+func copyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Add(k, v)
+		}
+	}
+}
+
+func basicHttpHandler(res http.ResponseWriter, req *http.Request) {
+	resp, err := http.DefaultTransport.RoundTrip(req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	defer resp.Body.Close()
+	copyHeader(res.Header(), resp.Header)
+
+	res.WriteHeader(resp.StatusCode)
+	io.Copy(res, resp.Body)
+}
+
 func (proxy *Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+
 	if req.Method == "CONNECT" {
 		proxy.handleConnect(res, req)
 		return
 	}
+
+	// uri := req.URL.String()
+	// if strings.Contains(uri, "seller.shopee.co.id/api/") {
+	// 	basicHttpHandler(res, req)
+	// 	return
+	// }
 
 	log := log.WithFields(log.Fields{
 		"in":     "Proxy.ServeHTTP",

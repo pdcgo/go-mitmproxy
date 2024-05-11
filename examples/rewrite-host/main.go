@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lqqyt2423/go-mitmproxy/proxy"
+	"github.com/pdcgo/go-mitmproxy/proxy"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -27,7 +27,7 @@ func main() {
 		StreamLargeBodies: 1024 * 1024 * 5,
 	}
 
-	p, err := proxy.NewProxy(opts)
+	p, err := proxy.NewProxy(false, opts)
 	if err != nil {
 		log.Fatal(err)
 	}
